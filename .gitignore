@@ -1,0 +1,12 @@
+/target/
+/src-tauri/gen/
+.DS_Store
+*.user
+*.pdb
+*.dmg
+*.app.tar.gz
+*.sig
+cef-profile/
+work/
+*.key
+*.key.pub

@@ -1,0 +1,44 @@
+[package]
+name = "nienudno-browser"
+version = "0.3.6"
+description = "NieNudno Browser"
+edition = "2021"
+rust-version = "1.77"
+default-run = "nienudno-browser"
+
+[package.metadata.cef.bundle]
+helper_name = "nienudno-browser-helper"
+resources_path = "resources"
+
+[lib]
+name = "nienudno_browser_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+cef = { version = "154.0.0", default-features = false, features = ["build-util"] }
+raw-window-handle = "0.6"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2.11.6", features = ["devtools", "unstable", "macos-proxy"] }
+reqwest = { version = "0.13", default-features = false, features = ["blocking", "json", "rustls", "socks"] }
+percent-encoding = "2"
+url = "2"
+tauri-plugin-updater = { version = "2", optional = true }
+
+[features]
+default = ["updater"]
+updater = ["dep:tauri-plugin-updater"]
+private = []
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = "0.3"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+x11-dl = "2"

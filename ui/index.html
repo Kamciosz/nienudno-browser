@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NieNudno Browser</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="tab-row">
+        <div class="brand"><img src="mark.svg" alt="" width="25" height="25"><span>NieNudno</span></div>
+        <div id="tabs" class="tabs" role="tablist" aria-label="Karty"></div>
+        <button id="new-tab" class="icon-button" type="button" title="Nowa karta" aria-label="Nowa karta">＋</button>
+        <button id="new-private" class="icon-button private-button" type="button" title="Nowa karta prywatna" aria-label="Nowa karta prywatna">＋ Prywatna</button>
+        <button id="new-tor" class="icon-button tor-button" type="button" title="Nowa karta Tor" aria-label="Nowa karta Tor">＋ Tor</button>
+      </div>
+      <div class="nav-row">
+        <div class="nav-controls">
+          <button id="back" class="icon-button" type="button" title="Wstecz" aria-label="Wstecz">←</button>
+          <button id="forward" class="icon-button" type="button" title="Dalej" aria-label="Dalej">→</button>
+          <button id="reload" class="icon-button" type="button" title="Odśwież" aria-label="Odśwież">↻</button>
+        </div>
+        <form id="address-form" class="address-wrap">
+          <span id="security-indicator" class="security-indicator"></span>
+          <input id="address" type="text" spellcheck="false" autocomplete="off" aria-label="Adres lub wyszukiwanie" placeholder="Wpisz adres lub wyszukaj">
+          <button id="go" type="submit" aria-label="Otwórz">↗</button>
+        </form>
+        <button id="bookmark" class="icon-button" type="button" title="Dodaj zakładkę" aria-label="Dodaj zakładkę">☆</button>
+        <button id="menu" class="icon-button" type="button" title="Menu" aria-label="Menu">☰</button>
+      </div>
+      <div id="connection-status" class="status-row" aria-live="polite">
+        <span id="connection-mode" class="connection-mode"></span>
+        <span id="connection-detail" class="connection-detail"></span>
+        <span id="page-status" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+    <div id="menu-panel" class="popover hidden" role="menu">
+      <button data-panel="bookmarks" type="button">☆ <span data-i18n="bookmarks">Zakładki</span></button>
+      <button data-panel="history" type="button">◷ <span data-i18n="history">Historia</span></button>
+      <button data-panel="settings" type="button">⚙ <span data-i18n="settings">Ustawienia</span></button>
+      <button id="devtools" type="button">⌘ <span data-i18n="devtools">Narzędzia programisty</span></button>
+    </div>
+    <div id="overlay" class="overlay hidden">
+      <section class="panel" aria-labelledby="panel-title">
+        <header>
+          <h1 id="panel-title"></h1>
+          <button id="close-panel" class="icon-button" type="button" aria-label="Zamknij">✕</button>
+        </header>
+        <div id="panel-content"></div>
+      </section>
+    </div>
+  </body>
+</html>

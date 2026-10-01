@@ -1,0 +1,52 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "productName": "NieNudno Browser",
+  "version": "0.3.6",
+  "identifier": "pl.nienudno.browser",
+  "build": {
+    "frontendDist": "../ui",
+    "beforeBundleCommand": "cargo run --release --bin prepare-cef-bundle"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "NieNudno Browser",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "devtools": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' ipc: http: https:; img-src 'self' data: http: https:; media-src 'self' data: http: https:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "deb", "appimage", "dmg"],
+    "createUpdaterArtifacts": true,
+    "icon": ["icons/icon.png", "icons/icon.ico", "icons/icon.icns"],
+    "macOS": {
+      "files": {
+        "Frameworks/Chromium Embedded Framework.framework": "../target/release/cef-bundle/Chromium Embedded Framework.framework",
+        "Frameworks/NieNudno Browser Helper.app": "../target/release/cef-bundle/NieNudno Browser Helper.app",
+        "Frameworks/NieNudno Browser Helper (GPU).app": "../target/release/cef-bundle/NieNudno Browser Helper (GPU).app",
+        "Frameworks/NieNudno Browser Helper (Renderer).app": "../target/release/cef-bundle/NieNudno Browser Helper (Renderer).app",
+        "Frameworks/NieNudno Browser Helper (Plugin).app": "../target/release/cef-bundle/NieNudno Browser Helper (Plugin).app",
+        "Frameworks/NieNudno Browser Helper (Alerts).app": "../target/release/cef-bundle/NieNudno Browser Helper (Alerts).app"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDIzQzc2NEI0MEZCM0VBNApSV1NrUHZ0QVMzWThBalYvSGduWlc0c25pRXd6Q0lhcUtRL2Y2K0E2VEQ0MjkyQkFMSlVVQ1VkVwo=",
+      "endpoints": [
+        "https://github.com/Kamciosz/nienudno-browser/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}
