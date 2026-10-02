@@ -304,6 +304,9 @@ window.addEventListener("keydown", (event) => {
   } else if (modifier && event.key.toLowerCase() === "r") {
     event.preventDefault();
     if (currentTab()) action("reload", { tab_id: currentTab().id });
+  } else if (modifier && event.key.toLowerCase() === "q") {
+    event.preventDefault();
+    invoke("quit_browser");
   } else if (event.key === "Escape") {
     if (panel) hidePanel();
     el("menu-panel").classList.add("hidden");

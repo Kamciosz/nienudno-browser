@@ -947,6 +947,11 @@ fn reload(app: AppHandle, tab_id: u64) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn quit_browser(app: AppHandle) {
+    quit_app(&app);
+}
+
+#[tauri::command]
 fn list_history(state: State<BrowserState>) -> Vec<HistoryEntry> {
     state.snapshot().history
 }
@@ -1103,7 +1108,10 @@ fn install_cr_app_protocol() {
 pub fn run() {
     #[cfg(target_os = "macos")]
     install_cr_app_protocol();
-    let app = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(all(feature = "updater", not(feature = "private")))]
+    let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    let app = builder
         .setup(|app| {
             let data_dir = app
                 .path()
@@ -1138,7 +1146,10 @@ pub fn run() {
                     &PredefinedMenuItem::hide(app, Some("Ukryj"))?,
                     &PredefinedMenuItem::hide_others(app, Some("Ukryj pozostałe"))?,
                     &PredefinedMenuItem::separator(app)?,
-                    &PredefinedMenuItem::quit(app, Some("Zakończ NieNudno"))?,
+                    // ponytail: PredefinedMenuItem::quit's Cmd+Q never fires on
+                    // macOS (action/terminate path dead in muda); custom item
+                    // with id routes through on_menu_event like Cmd+T does.
+                    &MenuItem::with_id(app, "quit", "Zakończ NieNudno", true, Some("CmdOrCtrl+Q"))?,
                 ],
             )?;
             let file_menu = Submenu::with_items(
@@ -1202,47 +1213,51 @@ pub fn run() {
                 menubar.push(help_menu);
             }
             app.set_menu(Menu::with_items(app, &menubar)?)?;
-            app.on_menu_event(|handle, event| match event.id().0.as_str() {
-                "new-tab" => {
-                    if let Err(error) =
-                        create_tab_internal(handle, HOME_PAGE.to_string(), false, false, None)
-                    {
-                        let _ = handle.emit("browser-cef-error", error);
-                    }
-                }
-                "close-tab" | "reload" => {
-                    let active = handle
-                        .state::<BrowserState>()
-                        .inner
-                        .lock()
-                        .expect("browser state lock poisoned")
-                        .tabs
-                        .values()
-                        .find(|tab| tab.active)
-                        .map(|tab| tab.id);
-                    if let Some(tab_id) = active {
-                        let result: Result<(), String> = if event.id().0 == "close-tab" {
-                            close_tab_impl(handle, tab_id).map(|_| ())
-                        } else {
-                            cef_host(handle).and_then(|host| host.reload(tab_id))
-                        };
-                        if let Err(error) = result {
+            app.on_menu_event(|handle, event| {
+                let id = event.id().0.clone();
+                diagnostics::log(&format!("menu event: {id}"));
+                match id.as_str() {
+                    "new-tab" => {
+                        if let Err(error) =
+                            create_tab_internal(handle, HOME_PAGE.to_string(), false, false, None)
+                        {
                             let _ = handle.emit("browser-cef-error", error);
                         }
                     }
-                }
-                "quit" => quit_app(handle),
-                #[cfg(not(feature = "private"))]
-                "show-logs" => {
-                    if let Ok(data_dir) = handle.path().app_data_dir() {
-                        let _ = Command::new("open")
-                            .arg(diagnostics::logs_dir(&data_dir))
-                            .spawn();
+                    "close-tab" | "reload" => {
+                        let active = handle
+                            .state::<BrowserState>()
+                            .inner
+                            .lock()
+                            .expect("browser state lock poisoned")
+                            .tabs
+                            .values()
+                            .find(|tab| tab.active)
+                            .map(|tab| tab.id);
+                        if let Some(tab_id) = active {
+                            let result: Result<(), String> = if id == "close-tab" {
+                                close_tab_impl(handle, tab_id).map(|_| ())
+                            } else {
+                                cef_host(handle).and_then(|host| host.reload(tab_id))
+                            };
+                            if let Err(error) = result {
+                                let _ = handle.emit("browser-cef-error", error);
+                            }
+                        }
                     }
+                    "quit" => quit_app(handle),
+                    #[cfg(not(feature = "private"))]
+                    "show-logs" => {
+                        if let Ok(data_dir) = handle.path().app_data_dir() {
+                            let _ = Command::new("open")
+                                .arg(diagnostics::logs_dir(&data_dir))
+                                .spawn();
+                        }
+                    }
+                    #[cfg(all(feature = "updater", not(feature = "private")))]
+                    "check-update" => check_for_update(handle.clone()),
+                    _ => {}
                 }
-                #[cfg(all(feature = "updater", not(feature = "private")))]
-                "check-update" => check_for_update(handle.clone()),
-                _ => {}
             });
 
             let cef_host = CefHost::initialize(
@@ -1325,7 +1340,8 @@ pub fn run() {
                 clear_history,
                 get_settings,
                 update_settings,
-                open_devtools
+                open_devtools,
+                quit_browser
             ];
             handler(invoke)
         })
