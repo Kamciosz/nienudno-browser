@@ -10,3 +10,4 @@ cef-profile/
 work/
 *.key
 *.key.pub
+latest.json
